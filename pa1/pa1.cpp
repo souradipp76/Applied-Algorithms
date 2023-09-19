@@ -37,9 +37,13 @@ class TreeeNode {
 
 int main(string[] argv) {
 
-    vector<string> wire = readFile(argv[2]);
-    vector<string> rc = splitLine(wire[0]);
-    float r = rc[0], c = rc[1];
+    vector<string>invParamLines = readFile(argv[2]);
+    vector<string> invParams = splitLine(invParamLines[0]);
+    double inC = stod(invParams[0]), outC = stod(invParams[1]), invR = stod(invParams[2]);
 
-    cout<<r<< ":" <, c <<endl;
+    vector<string> wireParamLines = readFile(argv[3]);
+    vector<string> wireParams = splitLine(wireParamLines[0]);
+    double wireR = stod(wireParams[0]), wireC = stod(wireParams[1]);
+
+    cout<<wireR<< ":" << wireC <<endl;
 }
