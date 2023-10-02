@@ -323,12 +323,20 @@ double calculateInsertionLength(vector<double> invParams, vector<double> wirePar
     }
 
     double x = (-b + sqrt(D))/(2.*a);
+    double y = (-b - sqrt(D))/(2.*a);
     //cout<<x<<endl;
     if(x>=0 && x<=1) {
         return x;
-    } else if (x>1) {
-        return 1;
+    } 
+
+    if(y>=0 && y<=1) {
+        return y;
     }
+
+    if(x>1 || y>1) {
+        return 1.1;
+    }
+
     return -1;
 }
 
@@ -352,7 +360,7 @@ TreeNode* insertInvNode(TreeNode* head,
     bool isLeft = parent->left == node;
     double L = isLeft ? parent -> llen : parent ->rlen;
 
-    if(x == 1) {
+    if(x > 1) {
         // Place inverter node at parent node
         parent->invCount++;
         parent->sinkCapacitance = parent->invCount*Ci;
@@ -478,23 +486,64 @@ double insertInverters(TreeNode* head,
     return max(ldelay + left_delay, rdelay + right_delay);
 }
 
-bool validateInverterInsertion(TreeNode* root, int &pathCount) {
+bool validateInverterInsertion(TreeNode* root, int pathCount) {
     if(!root->left && !root->right) {
         if((pathCount + root->invCount)&1) {
+            //cout<<root->nodeId<<endl;
             return false;
         }
     }
 
-    if(root->left) {
-        pathCount+=root->invCount;
-        return validateInverterInsertion(root->left, pathCount);
-        pathCount-=root->invCount;
+    if(root->left && root->llen !=-1) {
+        bool leftValid = validateInverterInsertion(root->left, pathCount+root->invCount);
+        if(!leftValid) {
+            return false;
+        }
     }
 
-    if(root->right) {
-        pathCount+=root->invCount;
-        return validateInverterInsertion(root->right, pathCount);
-        pathCount-=root->invCount;
+    if(root->right && root->rlen !=-1) {
+        bool rightValid = validateInverterInsertion(root->right, pathCount+root->invCount);
+        if(!rightValid) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool correctInverterInsertion(TreeNode* head, 
+                        TreeNode* root,
+                        vector<double> &invParams, 
+                        vector<double> &wireParams,
+                        int pathCount, 
+                        bool &inserted) {
+    if(!root->left && !root->right) {
+        if((pathCount + root->invCount)&1) {
+            //cout<<root->nodeId<<endl;
+            return false;
+        }
+    }
+
+    if(root->left && root->llen !=-1) {
+        bool leftValid = correctInverterInsertion(head, root->left, invParams, wireParams, pathCount+root->invCount, inserted);
+        if(!leftValid) {
+            if(!inserted) {
+                insertInvNode(head, root->left, root, invParams, wireParams, 1);
+                inserted = true;
+            }
+            return false;
+        }
+    }
+
+    if(root->right && root->rlen !=-1) {
+        bool rightValid = correctInverterInsertion(head, root->right, invParams, wireParams, pathCount+root->invCount, inserted);
+        if(!rightValid) {
+            if(!inserted) {
+                insertInvNode(head, root->right, root, invParams, wireParams, 1);
+                inserted = true;
+            }
+            return false;
+        }
     }
 
     return true;
@@ -556,6 +605,14 @@ int main(int argc, char *argv[])
     if(!valid) {
         return EXIT_FAILURE;
     }
+
+    // bool isNonInverting = validateInverterInsertion(root, 0);
+    // cout<<isNonInverting<<endl;
+
+    //Make tree non-inverting
+    bool inserted = false;
+    correctInverterInsertion(root, root, iParams, wParams, 0, inserted);
+
     vector<string> invTopology;
     postOrder(root, invTopology);
     writeFile(argv[7], invTopology);
@@ -563,11 +620,7 @@ int main(int argc, char *argv[])
     // Fourth Output
     writeBinaryTopoFile(argv[8], invTopology);
 
-    // displayElmoreDelay(root);
-
-    // int pathCount = 0;
-    // bool isNonInverting = validateInverterInsertion(root, pathCount);
-    // cout<<isNonInverting<<endl;
+    //displayElmoreDelay(root);
 
     // Release resource
     deleteTree(root);
