@@ -5,6 +5,3 @@ TARGET=pa1
 
 $(TARGET): *.cpp
 	$(CPP) $(CPPFLAGS) *.cpp -o $(TARGET) -lm
-
-clean: 
-	rm -rf $(TARGET)
