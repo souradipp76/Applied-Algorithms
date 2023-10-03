@@ -179,7 +179,7 @@ void deleteTree(TreeNode* root) {
     deleteTree(root->left);
     deleteTree(root->right);
 
-    delete(root);
+    delete root;
 }
 
 void preOrder(TreeNode* root, vector<string> &lines) {
@@ -316,6 +316,10 @@ double calculateInsertionLength(vector<double> invParams, vector<double> wirePar
     double a = 0.5*re*ce*L*L;
     double b = re*L*(C - 0.5*ce*L) + 0.5*ce*Ro*L;
     double c = Ro*(C - 0.5*ce*L) - t;
+
+    cout<<L<<endl;
+    cout<<C<<endl;
+    cout<<a<<":"<<b<<":"<<c<<endl;
 
     double D = b*b - 4*a*c;
     if(D < 0) {
@@ -556,6 +560,9 @@ int main(int argc, char *argv[])
 
     vector<string>invParamLines = readFile(argv[2]);
     vector<string> invParams = splitLine(invParamLines[0]);
+    if(invParams.size() != 3) {
+        return EXIT_FAILURE;
+    }
     vector<double> iParams;
     for(auto x: invParams) {
         iParams.push_back(stod(x));
@@ -563,6 +570,9 @@ int main(int argc, char *argv[])
 
     vector<string> wireParamLines = readFile(argv[3]);
     vector<string> wireParams = splitLine(wireParamLines[0]);
+    if(wireParams.size() != 2) {
+        return EXIT_FAILURE;
+    }
     vector<double> wParams;
     for(auto x: wireParams) {
         wParams.push_back(stod(x));
@@ -603,6 +613,8 @@ int main(int argc, char *argv[])
     bool valid = true;
     insertInverters(root, root, iParams, wParams, time_constraint, valid);
     if(!valid) {
+        cout<<"Unable to insert inverters under given constraint."<<endl;
+        deleteTree(root);
         return EXIT_FAILURE;
     }
 
@@ -620,7 +632,7 @@ int main(int argc, char *argv[])
     // Fourth Output
     writeBinaryTopoFile(argv[8], invTopology);
 
-    //displayElmoreDelay(root);
+    displayElmoreDelay(root);
 
     // Release resource
     deleteTree(root);
