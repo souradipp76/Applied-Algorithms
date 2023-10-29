@@ -185,20 +185,20 @@ void postOrder(TreeNode* root, int index, bool single, vector<string> &lines) {
     char line[200];
     if(root->left && root->right) {
         sprintf(line, "%s\n", root->nodeId.c_str());
-        cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
-        for(auto a: root->rectangles){
-            cout<<"("<<a.first<<","<<a.second<<")";
-        }
-        cout<<endl;
+        // cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
+        // for(auto a: root->rectangles){
+        //     cout<<"("<<a.first<<","<<a.second<<")";
+        // }
+        // cout<<endl;
     } else {
         int w = root->rectangles[index].first;
         int h = root->rectangles[index].second;
         sprintf(line, "%s((%d,%d)(%d,%d))\n", root->nodeId.c_str(), w, h, root->X, root->Y);
-        cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
-        for(auto a: root->rectangles){
-            cout<<"("<<a.first<<","<<a.second<<")";
-        }
-        cout<<endl;
+        // cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
+        // for(auto a: root->rectangles){
+        //     cout<<"("<<a.first<<","<<a.second<<")";
+        // }
+        // cout<<endl;
         
         lines.push_back(line);
     }
@@ -289,6 +289,8 @@ void doOptimalPacking(TreeNode* root){
             vpl[i] = vl[i].first;
             leftInds.push_back(root->left->indices[vl[i].second]);
         }
+
+        root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
         vector<pair<int, int>> rightInds;
@@ -297,6 +299,7 @@ void doOptimalPacking(TreeNode* root){
             rightInds.push_back(root->right->indices[vr[i].second]);
         }
 
+        root->right->rectangles = vpr;
         root->right->indices = rightInds;
 
         // sort(root->left->rectangles.begin(), root->left->rectangles.end(), compareWidth);
@@ -344,6 +347,8 @@ void doOptimalPacking(TreeNode* root){
             vpl[i] = vl[i].first;
             leftInds.push_back(root->left->indices[vl[i].second]);
         }
+
+        root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
         vector<pair<int, int>> rightInds;
@@ -352,8 +357,8 @@ void doOptimalPacking(TreeNode* root){
             rightInds.push_back(root->right->indices[vr[i].second]);
         }
 
+        root->right->rectangles = vpr;
         root->right->indices = rightInds;
-
 
         // sort(root->left->rectangles.begin(), root->left->rectangles.end(), compareHeight);
         // sort(root->right->rectangles.begin(), root->right->rectangles.end(), compareHeight);
