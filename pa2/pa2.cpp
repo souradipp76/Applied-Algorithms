@@ -138,7 +138,7 @@ TreeNode* constructTree(vector<string> nodes) {
             st.pop();
 
             string newId = l->nodeId +"-"+ c + "-"+r->nodeId;
-            TreeNode *treeNode = new TreeNode(newId, c, l, r);
+            TreeNode *treeNode = new TreeNode("", c, l, r);
             st.push(treeNode);
         } else {
             int id;
@@ -284,29 +284,23 @@ void doOptimalPacking(TreeNode* root){
         sort(vl.begin(), vl.end(), compareWidth);
         sort(vr.begin(), vr.end(), compareWidth);
 
-        vector<pair<int, int>> leftInds;
+        vector<pair<int, int>> leftInds(root->left->indices);
         for(int i=0;i<llen;i++) {
             vpl[i] = vl[i].first;
-            leftInds.push_back(root->left->indices[vl[i].second]);
+            root->left->rectangles[i] = vpr[i];
+            root->left->indices[i] = leftInds[vr[i].second];
         }
 
         root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
-        vector<pair<int, int>> rightInds;
+        vector<pair<int, int>> rightInds(root->right->indices);
         for(int i=0;i<rlen;i++) {
             vpr[i] = vr[i].first;
-            rightInds.push_back(root->right->indices[vr[i].second]);
+            root->right->rectangles[i] = vpr[i];
+            root->right->indices[i] = rightInds[vr[i].second];
         }
 
-        root->right->rectangles = vpr;
-        root->right->indices = rightInds;
-
-        // sort(root->left->rectangles.begin(), root->left->rectangles.end(), compareWidth);
-        // sort(root->right->rectangles.begin(), root->right->rectangles.end(), compareWidth);
-
-        // vector<pair<int, int>> vpl = root->left->rectangles;
-        // vector<pair<int, int>> vpr = root->right->rectangles;
         int i=0,j=0, l1 = vpl.size(), l2 = vpr.size();
         
         root->rectangles.clear();
@@ -342,29 +336,22 @@ void doOptimalPacking(TreeNode* root){
         sort(vl.begin(), vl.end(), compareHeight);
         sort(vr.begin(), vr.end(), compareHeight);
 
-        vector<pair<int, int>> leftInds;
+        vector<pair<int, int>> leftInds(root->left->indices);
         for(int i=0;i<llen;i++) {
             vpl[i] = vl[i].first;
-            leftInds.push_back(root->left->indices[vl[i].second]);
+            root->left->rectangles[i] = vpr[i];
+            root->left->indices[i] = leftInds[vr[i].second];
         }
 
         root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
-        vector<pair<int, int>> rightInds;
+        vector<pair<int, int>> rightInds(root->right->indices);
         for(int i=0;i<rlen;i++) {
             vpr[i] = vr[i].first;
-            rightInds.push_back(root->right->indices[vr[i].second]);
+            root->right->rectangles[i] = vpr[i];
+            root->right->indices[i] = rightInds[vr[i].second];
         }
-
-        root->right->rectangles = vpr;
-        root->right->indices = rightInds;
-
-        // sort(root->left->rectangles.begin(), root->left->rectangles.end(), compareHeight);
-        // sort(root->right->rectangles.begin(), root->right->rectangles.end(), compareHeight);
-
-        // vector<pair<int, int>> vpl = root->left->rectangles;
-        // vector<pair<int, int>> vpr = root->right->rectangles;
 
         int i=0,j=0, l1 = vpl.size(), l2 = vpr.size();
 
@@ -415,7 +402,7 @@ int main(int argc, char *argv[])
     vector<string> lines;
 
     pair<int, int> p = singlePacking(root);
-    cout<< p.first <<":" << p.second <<endl;
+    //cout<< p.first <<":" << p.second <<endl;
     char pstr[100];
     sprintf(pstr, "(%d,%d)\n", p.first, p.second);
     lines.push_back(pstr);
@@ -427,13 +414,11 @@ int main(int argc, char *argv[])
     writeFile(argv[3], lines);
     lines.clear();
 
-    cout<<endl;
-
     vector<string> newLines;
     doOptimalPacking(root);
     p = getOptimalPacking(root, newLines);
 
-    cout<< p.first <<":" << p.second <<endl;
+    //cout<< p.first <<":" << p.second <<endl;
     sprintf(pstr, "(%d,%d)\n", p.first, p.second);
     lines.push_back(pstr);
     writeFile(argv[4], lines);
