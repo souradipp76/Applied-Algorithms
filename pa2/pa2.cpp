@@ -150,7 +150,10 @@ TreeNode* constructTree(vector<string> nodes) {
             rectStr.pop_back();
             vector<pair<int, int>> rectangles = getRectangles(rectStr);
             vector<pair<int, int>> indices;
-            indices.push_back({-1,-1});
+            int len = rectangles.size();
+            for(int i=0;i<len;i++){
+                indices.push_back({-1,-1});
+            }
             TreeNode *treeNode = new TreeNode(to_string(id), rectangles, indices);
             st.push(treeNode);
         }
