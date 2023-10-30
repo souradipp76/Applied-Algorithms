@@ -114,7 +114,7 @@ class TreeNode {
         TreeNode* left = NULL;
         TreeNode* right = NULL;
     
-        TreeNode(string id, vector<pair<int, int>> rect) : nodeId(id), rectangles(rect) {}
+        TreeNode(string id, vector<pair<int, int>> rect, vector<pair<int, int>> ind) : nodeId(id), rectangles(rect), indices(ind) {}
         TreeNode(string id, char cut, TreeNode* l, TreeNode* r) : nodeId(id), cutLine(cut), left(l), right(r) {}
 };
 
@@ -126,8 +126,7 @@ TreeNode* constructTree(vector<string> nodes) {
         bool isLeaf = true;
         char c;
 
-        int done = node.size() == 1;
-        if (done > 0) {
+        if (node.size() == 1) {
             isLeaf = false;
             c = node[0];
         }
@@ -142,14 +141,17 @@ TreeNode* constructTree(vector<string> nodes) {
             TreeNode *treeNode = new TreeNode("", c, l, r);
             st.push(treeNode);
         } else {
-            int id;
-            char rect[200];
-            done = sscanf(node.c_str(),"%d%s", &id, rect);
-            string rectStr(rect);
+            size_t pos = node.find('(');
+            string idStr = node.substr(0, pos);
+            int id = stoi(idStr);
+
+            string rectStr = node.substr(pos);
             rectStr.erase(rectStr.begin());
             rectStr.pop_back();
             vector<pair<int, int>> rectangles = getRectangles(rectStr);
-            TreeNode *treeNode = new TreeNode(to_string(id), rectangles);
+            vector<pair<int, int>> indices;
+            indices.push_back({-1,-1});
+            TreeNode *treeNode = new TreeNode(to_string(id), rectangles, indices);
             st.push(treeNode);
         }
     }
@@ -255,7 +257,6 @@ pair<int, int> singlePacking(TreeNode* root){
 
 void doOptimalPacking(TreeNode* root){
     if(!root ->left && !root->right) {
-        root->indices.push_back({-1,-1});
         return;
     }
 
@@ -280,7 +281,6 @@ void doOptimalPacking(TreeNode* root){
             vl[i] = {vpl[i], i};
         }
 
-        
         for(int i=0;i<rlen;i++) {
             vr[i] = {vpr[i], i};
         }
@@ -308,7 +308,7 @@ void doOptimalPacking(TreeNode* root){
 
         int i=0,j=0;
         root->rectangles.clear();
-        while(i<llen && j< rlen) {
+        while(i < llen && j < rlen) {
             pair<int,int> p = {vpl[i].first+ vpr[j].first, max(vpl[i].second, vpr[j].second)};
             root->rectangles.push_back(p);
             root->indices.push_back({i,j});
@@ -379,7 +379,7 @@ void doOptimalPacking(TreeNode* root){
 
 pair<int,int> getOptimalPacking(TreeNode* root, vector<string> &lines) {
     int n = root-> rectangles.size();
-    long area = INT_MAX, index = -1;
+    long area = LONG_MAX, index = -1;
     for(int i=0;i<n;i++) {
         pair<int,int> p = root-> rectangles[i];
         if(p.first*p.second < area) {
