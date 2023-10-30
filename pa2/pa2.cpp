@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <unordered_map>
 #include <cmath>
+#include <climits>
 
 using namespace std;
 
@@ -269,42 +270,45 @@ void doOptimalPacking(TreeNode* root){
 
         vector<pair<int, int>> vpl = root->left->rectangles;
         vector<pair<int, int>> vpr = root->right->rectangles;
-        vector<pair<pair<int,int>, int>> vl;
-        vector<pair<pair<int,int>, int>> vr;
+        
         int llen = vpl.size();
+        int rlen = vpr.size();
+
+        vector<pair<pair<int,int>, int>> vl(llen);
+        vector<pair<pair<int,int>, int>> vr(rlen);
         for(int i=0;i<llen;i++) {
-            vl.push_back({vpl[i], i});
+            vl[i] = {vpl[i], i};
         }
 
-        int rlen = vpr.size();
+        
         for(int i=0;i<rlen;i++) {
-            vr.push_back({vpr[i], i});
+            vr[i] = {vpr[i], i};
         }
 
         sort(vl.begin(), vl.end(), compareWidth);
         sort(vr.begin(), vr.end(), compareWidth);
 
-        vector<pair<int, int>> leftInds(root->left->indices);
+        vector<pair<int, int>> leftInds(llen);
         for(int i=0;i<llen;i++) {
             vpl[i] = vl[i].first;
-            root->left->rectangles[i] = vpr[i];
-            root->left->indices[i] = leftInds[vr[i].second];
+            leftInds[i] = root->left->indices[vl[i].second];
         }
 
         root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
-        vector<pair<int, int>> rightInds(root->right->indices);
+        vector<pair<int, int>> rightInds(rlen);
         for(int i=0;i<rlen;i++) {
             vpr[i] = vr[i].first;
-            root->right->rectangles[i] = vpr[i];
-            root->right->indices[i] = rightInds[vr[i].second];
+            rightInds[i] = root->right->indices[vr[i].second];
         }
 
-        int i=0,j=0, l1 = vpl.size(), l2 = vpr.size();
-        
+        root->right->rectangles = vpr;
+        root->right->indices = rightInds;
+
+        int i=0,j=0;
         root->rectangles.clear();
-        while(i<l1 && j< l2) {
+        while(i<llen && j< rlen) {
             pair<int,int> p = {vpl[i].first+ vpr[j].first, max(vpl[i].second, vpr[j].second)};
             root->rectangles.push_back(p);
             root->indices.push_back({i,j});
@@ -321,42 +325,43 @@ void doOptimalPacking(TreeNode* root){
 
         vector<pair<int, int>> vpl = root->left->rectangles;
         vector<pair<int, int>> vpr = root->right->rectangles;
-        vector<pair<pair<int,int>, int>> vl;
-        vector<pair<pair<int,int>, int>> vr;
         int llen = vpl.size();
+        int rlen = vpr.size();
+
+        vector<pair<pair<int,int>, int>> vl(llen);
+        vector<pair<pair<int,int>, int>> vr(rlen);
         for(int i=0;i<llen;i++) {
-            vl.push_back({vpl[i], i});
+            vl[i] = {vpl[i], i};
         }
 
-        int rlen = vpr.size();
         for(int i=0;i<rlen;i++) {
-            vr.push_back({vpr[i], i});
+            vr[i] = {vpr[i], i};
         }
 
         sort(vl.begin(), vl.end(), compareHeight);
         sort(vr.begin(), vr.end(), compareHeight);
 
-        vector<pair<int, int>> leftInds(root->left->indices);
+        vector<pair<int, int>> leftInds(llen);
         for(int i=0;i<llen;i++) {
             vpl[i] = vl[i].first;
-            root->left->rectangles[i] = vpr[i];
-            root->left->indices[i] = leftInds[vr[i].second];
+            leftInds[i] = root->left->indices[vl[i].second];
         }
 
         root->left->rectangles = vpl;
         root->left->indices = leftInds;
 
-        vector<pair<int, int>> rightInds(root->right->indices);
+        vector<pair<int, int>> rightInds(rlen);
         for(int i=0;i<rlen;i++) {
             vpr[i] = vr[i].first;
-            root->right->rectangles[i] = vpr[i];
-            root->right->indices[i] = rightInds[vr[i].second];
+            rightInds[i] = root->right->indices[vr[i].second];
         }
 
-        int i=0,j=0, l1 = vpl.size(), l2 = vpr.size();
+        root->right->rectangles = vpr;
+        root->right->indices = rightInds;
 
+        int i=0,j=0;
         root->rectangles.clear();
-        while(i<l1 && j< l2) {
+        while(i < llen && j < rlen) {
             pair<int,int> p = {max(vpl[i].first, vpr[j].first), vpl[i].second+ vpr[j].second};
             root->rectangles.push_back(p);
             root->indices.push_back({i,j});
@@ -402,7 +407,7 @@ int main(int argc, char *argv[])
     vector<string> lines;
 
     pair<int, int> p = singlePacking(root);
-    //cout<< p.first <<":" << p.second <<endl;
+    cout<< p.first <<":" << p.second <<endl;
     char pstr[100];
     sprintf(pstr, "(%d,%d)\n", p.first, p.second);
     lines.push_back(pstr);
@@ -418,7 +423,7 @@ int main(int argc, char *argv[])
     doOptimalPacking(root);
     p = getOptimalPacking(root, newLines);
 
-    //cout<< p.first <<":" << p.second <<endl;
+    cout<< p.first <<":" << p.second <<endl;
     sprintf(pstr, "(%d,%d)\n", p.first, p.second);
     lines.push_back(pstr);
     writeFile(argv[4], lines);
