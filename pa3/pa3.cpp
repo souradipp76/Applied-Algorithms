@@ -1,17 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <stack>
-#include <queue>
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
-#include <unordered_map>
 #include <cmath>
-#include <cfloat>
 
-#define INF 1000000
 using namespace std;
 
 void readBinaryFile(const string filename) {
@@ -66,39 +61,37 @@ vector<string> splitLine(const string s){
 }
 
 void findSmallestCycleMeanInPath(vector<vector<double>> &D, vector<vector<int>> &P, 
-        int k, int vs, double &minCycleMean, vector<int> &level, vector<int> &minCycle) {
-    vector<int> level_stack;
-    int v = vs;
+        int k, int v, double &minCycleMean, vector<int> &level, vector<int> &minCycle) {
+    vector<int> path;
     for(int j = k; j>=0 ;j--){
         if(level[v] > -1){
-            double l = (D[level[v]][v] - D[j][v])/(level[v] - j);
-            int cycleLength = level[v] - j;
-            if(l<minCycleMean) {
-                minCycleMean = l;
+            double lambda = (D[level[v]][v] - D[j][v])/(level[v] - j);
+            int c = level[v] - j;
+            if(lambda < minCycleMean) {
+                minCycleMean = lambda;
                 minCycle.clear();
-                int c = level_stack.size();
-                for(int i=c-1;i>=c-cycleLength;i--){
-                    minCycle.push_back(level_stack[i]);
-                    //cout<<cycle[i]<<"->";
+                int l = path.size();
+                for(int i = l-1; i >= l-c; i--){
+                    minCycle.push_back(path[i]);
                 }
             }
         }
 
         level[v] = j;
-        level_stack.push_back(v);
+        path.push_back(v);
         v = P[j][v];
     }
 
-    int l = level_stack.size();
-    for(int i = 0;i<l;i++){
-        level[level_stack[i]] = -1;
+    int l = path.size();
+    for(int i = 0; i<l; i++){
+        level[path[i]] = -1;
     }
 }
 
 double findSmallestCycleMean(vector<vector<double>> &D, vector<vector<int>> &P, int k, int n, vector<int> &level, vector<int> &minCycle) {
-    double minCycleMean = INF;
+    double minCycleMean = INFINITY;
     for(int v=0; v<n; v++){
-        if(D[k][v] != INF){
+        if(!isinf(D[k][v])){
             findSmallestCycleMeanInPath(D, P, k, v, minCycleMean, level, minCycle);
         }
     }
@@ -115,7 +108,7 @@ vector<pair<double, pair<int, int>>> calculatePi(vector<vector<double>> &D, vect
     vector<pair<double, pair<int, int>>> pi(n);
     for(int v = 0; v <n; v++){
         pair<int, int> p = {-1, 0};
-        pi[v] = {INF, p};
+        pi[v] = {INFINITY, p};
         for(int j = 0; j <= k; j++){
             if(pi[v].first > D[j][v] - j*minCycleMean){
                 pi[v].first = D[j][v] - j*minCycleMean;
@@ -127,13 +120,25 @@ vector<pair<double, pair<int, int>>> calculatePi(vector<vector<double>> &D, vect
     return pi;
 }
 
+double getTolerance(double minCycleMean){
+    if(!isinf(minCycleMean)) {
+        if(abs(minCycleMean) < 1.0e-15 ) {
+            return 1.0e-15;
+        } else {
+            return abs(minCycleMean)*1.0e-6;
+        }   
+    }
+
+    return 1.0e-6;
+}
+
 bool checkPi(vector<vector<pair<int, double>>> &adj, vector<pair<double, pair<int, int>>> &pi, double &minCycleMean){
     int n = adj.size();
     for(int i=0;i<n;i++){
         int len = adj[i].size();
         for(int j = 0;j<len;j++){
             int v = adj[i][j].first;
-            long double x = pi[i].first + adj[i][j].second - minCycleMean + 1e-6;
+            long double x = pi[i].first + adj[i][j].second - minCycleMean + getTolerance(minCycleMean);
             if(pi[v].first > x){
                 return false;
             }
@@ -146,13 +151,11 @@ bool checkEarlyTermination(vector<vector<pair<int, double>>> &adj, vector<vector
         int k, vector<int> &level, double &minMean, vector<int> &minCycle){
     int n = adj.size();
     if(isPower2(k) || k == n-1) {
-        // cout<<"here"<<endl;
         double minCycleMean = findSmallestCycleMean(D, P, k, n, level, minCycle);
         // cout<<minCycleMean<<endl;
         minMean = minCycleMean;
 
         vector<pair<double, pair<int, int>>> pi = calculatePi(D, P, k, n, minMean);
-        // cout<<"Pi"<<endl;
 
         bool done = checkPi(adj, pi, minMean);
         // cout<<"Done:"<<done<<endl;
@@ -160,12 +163,11 @@ bool checkEarlyTermination(vector<vector<pair<int, double>>> &adj, vector<vector
             return true;
         }
     }
-    // cout<<"here2"<<endl;
     return false;
 }   
 
 void init(vector<vector<double>> &D, vector<vector<int>> &P, int n){
-    vector<double> d(n, INF);
+    vector<double> d(n, INFINITY);
     vector<int> p(n, -1);
     D.push_back(d);
     P.push_back(p);
@@ -173,7 +175,7 @@ void init(vector<vector<double>> &D, vector<vector<int>> &P, int n){
 
 double mcm(vector<vector<pair<int, double>>> &adj, vector<int> &minCycle) {
     int n = adj.size();
-    double minMean = INF;
+    double minMean = INFINITY;
     vector<vector<double>> D;
     vector<vector<int>> P;
     vector<int> level(n, -1);
@@ -182,21 +184,21 @@ double mcm(vector<vector<pair<int, double>>> &adj, vector<int> &minCycle) {
     D[0][0] = 0;
 
     for(int k = 1;k<n+1;k++) {
-        // cout<<"######## k = "<<k<<" ########"<<endl;
         init(D, P, n);
         for(long u=0;u<n;u++) {
             long len = adj[u].size();
             for(long j=0;j<len;j++){
                 long v = adj[u][j].first;
                 double w = adj[u][j].second;
-                long double newPath = D[k-1][u] == INF ? INF : D[k-1][u] + w;
-                if(D[k][v] > newPath) {
+                long double newDist = isinf(D[k-1][u]) ? INFINITY : D[k-1][u] + w;
+                if(D[k][v] > newDist) {
                     D[k][v] = D[k-1][u]+w;
                     P[k][v] = u;
                 }
             }
         }
 
+        // cout<<"######## k = "<<k<<" ########"<<endl;
         // for(int i=0;i<=k;i++) {
         //     for(int j=0;j<n;j++){
         //         cout<<D[i][j]<<":";
@@ -215,6 +217,7 @@ double mcm(vector<vector<pair<int, double>>> &adj, vector<int> &minCycle) {
         // cout<<"T:"<<terminate<<endl;
 
         if(terminate){
+            cout<<"Terminated at K = "<<k<<endl;
             break;
         }
     }
@@ -228,7 +231,7 @@ vector<vector<pair<int, double>>> constructGraph(vector<string> &gr, long &n, lo
     for(auto line: gr){
         vector<string> parts = splitLine(line);
         if(parts[0] == "V") {
-            n = stoi(parts[1]);
+            n = stol(parts[1]);
             for(long i=0;i<n;i++){
                 vector<pair<int, double>> p;
                 adj.push_back(p);
@@ -246,6 +249,11 @@ vector<vector<pair<int, double>>> constructGraph(vector<string> &gr, long &n, lo
     return adj;
 }
 
+// double fRand(double fMin, double fMax)
+// {
+//     double f = (double)rand() / RAND_MAX;
+//     return fMin + f * (fMax - fMin);
+// }
 
 int main(int argc, char *argv[])
 {
@@ -259,17 +267,45 @@ int main(int argc, char *argv[])
     cout << minCycleMean <<endl;
     writeBinaryFile(argv[2], minCycleMean);
 
-    int c = minMeanCycle.size();
-    string res = "";
-    for(int i=c-1;i>=0;i--){
+    int cycleSize = minMeanCycle.size();
+    string cycleStr = "";
+    for(int i=cycleSize-1;i>=0;i--){
+        int node = minMeanCycle[i]+1;
         string delimeter = (i == 0) ? "\n" : " ";
-        res += to_string(minMeanCycle[i]+1) + delimeter;
+        cycleStr += to_string(node) + delimeter;
     }
-    cout<<res;
-
+    cout<<cycleStr;
     vector<string> lines;
-    lines.push_back(res);
+    lines.push_back(cycleStr);
     writeFile(argv[3], lines);
+
+    ////////// Testing with random graph ///////////////
+    // srand(10);
+    // vector<string> test_gr;
+    // test_gr.push_back("V 50000");
+    // test_gr.push_back("E 200000");
+    // for(int i =0;i<200000;i++){
+    //     int x = 1 + (rand() % 50000);
+    //     int y = 1 + (rand() % 50000);
+    //     double c = fRand(-100.0, 100.0);
+    //     test_gr.push_back(to_string(y)+" "+to_string(x)+ " "+ to_string(c));
+    // }
+
+    // vector<vector<pair<int, double>>> adj2 = constructGraph(test_gr, n, e);
+    // cout<<n<<":"<<e<<endl;
+
+    // vector<int> minMeanCycle2;
+    // double minCycleMean2 = mcm(adj2, minMeanCycle2);
+    // cout << minCycleMean2 <<endl;
+
+    // int s = minMeanCycle2.size();
+    // string res = "";
+    // for(int i=s-1;i>=0;i--){
+    //     int node = minMeanCycle2[i]+1;
+    //     string delimeter = (i == 0) ? "\n" : " ";
+    //     res += to_string(node) + delimeter;
+    // }
+    // cout<<res;
    
     return EXIT_SUCCESS;
 }
