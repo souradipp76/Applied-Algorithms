@@ -243,6 +243,9 @@ int main(int argc, char *argv[])
 
     vector<int> minMeanCycle;
     double minCycleMean = mcm(adj, minMeanCycle);
+    if(isinf(minCycleMean)) {
+        return EXIT_FAILURE;
+    }
     // cout << minCycleMean <<endl;
     writeBinaryFile(argv[2], minCycleMean);
 
