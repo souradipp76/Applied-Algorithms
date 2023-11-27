@@ -13,9 +13,7 @@ void readBinaryFile(const string filename) {
     FILE* f = fopen(filename.c_str(), "rb");
     float m;
     int done = fread(&m, sizeof(float), 1, f);
-    if(done > 0) {
-        printf("%f\n", m);
-    }
+    printf("%f\n", m);
     fclose(f);
 }
 
@@ -199,10 +197,27 @@ double mcm(vector<vector<pair<int, double>>> &adj, vector<int> &minCycle) {
                 }
             }
         }
+
+        // cout<<"######## k = "<<k<<" ########"<<endl;
+        // for(int i=0;i<=k;i++) {
+        //     for(int j=0;j<n;j++){
+        //         cout<<D[i][j]<<":";
+        //     }
+        //     cout<<endl;
+        // }
+
+        // for(int i=0;i<=k;i++) {
+        //     for(int j=0;j<n;j++){
+        //         cout<<P[i][j]<<":";
+        //     }
+        //     cout<<endl;
+        // }
         
         bool terminate = checkEarlyTermination(adj, D, P, k, level, minMean, minCycle);
+        // cout<<"T:"<<terminate<<endl;
+
         if(terminate){
-            // cout<<"Terminated at K = "<<k<<endl;
+            cout<<"Terminated at K = "<<k<<endl;
             break;
         }
     }
@@ -234,16 +249,22 @@ vector<vector<pair<int, double>>> constructGraph(vector<string> &gr, long &n, lo
     return adj;
 }
 
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
 int main(int argc, char *argv[])
 {
     vector<string> graph = readFile(argv[1]);
     long n = 0, e = 0;
     vector<vector<pair<int, double>>> adj = constructGraph(graph, n, e);
-    // cout<<n<<":"<<e<<endl;
+    cout<<n<<":"<<e<<endl;
 
     vector<int> minMeanCycle;
     double minCycleMean = mcm(adj, minMeanCycle);
-    // cout << minCycleMean <<endl;
+    cout << minCycleMean <<endl;
     writeBinaryFile(argv[2], minCycleMean);
 
     int cycleSize = minMeanCycle.size();
@@ -253,10 +274,38 @@ int main(int argc, char *argv[])
         string delimeter = (i == 0) ? "\n" : " ";
         cycleStr += to_string(node) + delimeter;
     }
-    // cout<<cycleStr;
+    cout<<cycleStr;
     vector<string> lines;
     lines.push_back(cycleStr);
     writeFile(argv[3], lines);
+
+    //////// Testing with random graph ///////////////
+    srand(10);
+    vector<string> test_gr;
+    test_gr.push_back("V 50000");
+    test_gr.push_back("E 200000");
+    for(int i =0;i<200000;i++){
+        int x = 1 + (rand() % 50000);
+        int y = 1 + (rand() % 50000);
+        double c = fRand(-100.0, 100.0);
+        test_gr.push_back(to_string(y)+" "+to_string(x)+ " "+ to_string(c));
+    }
+
+    vector<vector<pair<int, double>>> adj2 = constructGraph(test_gr, n, e);
+    cout<<n<<":"<<e<<endl;
+
+    vector<int> minMeanCycle2;
+    double minCycleMean2 = mcm(adj2, minMeanCycle2);
+    cout << minCycleMean2 <<endl;
+
+    int s = minMeanCycle2.size();
+    string res = "";
+    for(int i=s-1;i>=0;i--){
+        int node = minMeanCycle2[i]+1;
+        string delimeter = (i == 0) ? "\n" : " ";
+        res += to_string(node) + delimeter;
+    }
+    cout<<res;
    
     return EXIT_SUCCESS;
 }
