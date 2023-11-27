@@ -188,9 +188,8 @@ void postOrder(TreeNode* root, int index, bool single, vector<string> &lines) {
     postOrder(root->left, lIdx, single, lines);
     postOrder(root->right, rIdx, single, lines);
 
-    char line[200];
     if(root->left && root->right) {
-        sprintf(line, "%s\n", root->nodeId.c_str());
+        // sprintf(line, "%s\n", root->nodeId.c_str());
         // cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
         // for(auto a: root->rectangles){
         //     cout<<"("<<a.first<<","<<a.second<<")";
@@ -199,7 +198,9 @@ void postOrder(TreeNode* root, int index, bool single, vector<string> &lines) {
     } else {
         int w = root->rectangles[index].first;
         int h = root->rectangles[index].second;
-        sprintf(line, "%s((%d,%d)(%d,%d))\n", root->nodeId.c_str(), w, h, root->X, root->Y);
+        string line = root->nodeId.c_str()+"("+w+","h+")("+root->X+","+root->Y+")\n";
+
+        // sprintf(line, "%s((%d,%d)(%d,%d))\n", root->nodeId.c_str(), w, h, root->X, root->Y);
         // cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
         // for(auto a: root->rectangles){
         //     cout<<"("<<a.first<<","<<a.second<<")";
