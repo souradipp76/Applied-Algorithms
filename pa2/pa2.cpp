@@ -28,7 +28,7 @@ vector<string> readFile(const string filename){
     return lines;
 }
 
-void writeFile(const string filename, vector<string> lines)
+void writeFile(const string filename, vector<string> &lines)
 {
     ofstream file(filename);
     if (file.is_open()) {
@@ -50,7 +50,7 @@ vector<string> splitLine(const string s){
     return words;
 }
 
-bool compareWidth(pair<pair<int,int>,int> A, pair<pair<int,int>,int> B){
+bool compareWidth(pair<pair<int,int>,int> &A, pair<pair<int,int>,int> &B){
     pair<int,int> a = A.first;
     pair<int,int> b = B.first;
     if(a.first < b.first) {
@@ -61,7 +61,7 @@ bool compareWidth(pair<pair<int,int>,int> A, pair<pair<int,int>,int> B){
     return false;
 }
 
-bool compareHeight(pair<pair<int,int>,int> A, pair<pair<int,int>,int> B){
+bool compareHeight(pair<pair<int,int>,int> &A, pair<pair<int,int>,int> &B){
     pair<int,int> a = A.first;
     pair<int,int> b = B.first;
     if(a.second < b.second) {
@@ -72,7 +72,7 @@ bool compareHeight(pair<pair<int,int>,int> A, pair<pair<int,int>,int> B){
     return false;
 }
 
-vector<pair<int,int>> getRectangles(string rectangleStr) {
+vector<pair<int,int>> getRectangles(string &rectangleStr) {
     int s = rectangleStr.size();
     string oneRect = "";
     int done = 0;
@@ -105,7 +105,7 @@ vector<pair<int,int>> getRectangles(string rectangleStr) {
 
 class TreeNode {
     public:
-        string nodeId = "";
+        int nodeId = -1;
         vector<pair<int, int>> rectangles;
         vector<pair<int, int>> indices;
         int X = 0;
@@ -114,39 +114,31 @@ class TreeNode {
         TreeNode* left = NULL;
         TreeNode* right = NULL;
     
-        TreeNode(string id, vector<pair<int, int>> rect, vector<pair<int, int>> ind) : nodeId(id), rectangles(rect), indices(ind) {}
-        TreeNode(string id, char cut, TreeNode* l, TreeNode* r) : nodeId(id), cutLine(cut), left(l), right(r) {}
+        TreeNode(int id, vector<pair<int, int>> rect, vector<pair<int, int>> ind) : nodeId(id), rectangles(rect), indices(ind) {}
+        TreeNode(int id, char cut, TreeNode* l, TreeNode* r) : nodeId(id), cutLine(cut), left(l), right(r) {}
 };
 
-TreeNode* constructTree(vector<string> nodes) {
+TreeNode* constructTree(vector<string> &nodes) {
     TreeNode *head = NULL;  
 
     stack<TreeNode*> st;
-    for(auto &node: nodes) {
-        bool isLeaf = true;
-        char c;
-
-        if (node.size() == 1) {
-            isLeaf = false;
-            c = node[0];
-        }
-
-        if (!isLeaf) {
+    for(string node: nodes) {
+        char c = node[0];
+        if (c == 'V' || c == 'H') {
             TreeNode* r = st.top();
             st.pop();
             TreeNode* l = st.top();
             st.pop();
 
-            string newId = l->nodeId +"-"+ c + "-"+r->nodeId;
-            TreeNode *treeNode = new TreeNode("", c, l, r);
+            //string newId = l->nodeId +"-"+ c + "-"+r->nodeId;
+            TreeNode *treeNode = new TreeNode(-1, c, l, r);
             st.push(treeNode);
         } else {
             size_t pos = node.find('(');
             string idStr = node.substr(0, pos);
             int id = stoi(idStr);
 
-            string rectStr = node.substr(pos);
-            rectStr.erase(rectStr.begin());
+            string rectStr = node.substr(pos+1);
             rectStr.pop_back();
             vector<pair<int, int>> rectangles = getRectangles(rectStr);
             vector<pair<int, int>> indices;
@@ -154,7 +146,7 @@ TreeNode* constructTree(vector<string> nodes) {
             for(int i=0;i<len;i++){
                 indices.push_back({-1,-1});
             }
-            TreeNode *treeNode = new TreeNode(to_string(id), rectangles, indices);
+            TreeNode *treeNode = new TreeNode(id, rectangles, indices);
             st.push(treeNode);
         }
     }
@@ -198,7 +190,7 @@ void postOrder(TreeNode* root, int index, bool single, vector<string> &lines) {
     } else {
         int w = root->rectangles[index].first;
         int h = root->rectangles[index].second;
-        string line = root->nodeId.c_str()+"("+w+","h+")("+root->X+","+root->Y+")\n";
+        string line = to_string(root->nodeId)+"(("+to_string(w)+","+to_string(h)+")("+to_string(root->X)+","+to_string(root->Y)+"))\n";
 
         // sprintf(line, "%s((%d,%d)(%d,%d))\n", root->nodeId.c_str(), w, h, root->X, root->Y);
         // cout<<root->nodeId<<":("<<root->rectangles[index].first<<","<<root->rectangles[index].second<<"):"<<root->X<<":"<<root->Y<<endl;
@@ -412,9 +404,7 @@ int main(int argc, char *argv[])
 
     pair<int, int> p = singlePacking(root);
     cout<< p.first <<":" << p.second <<endl;
-    char pstr[100];
-    sprintf(pstr, "(%d,%d)\n", p.first, p.second);
-    lines.push_back(pstr);
+    lines.push_back("("+to_string(p.first)+","+to_string(p.second)+")\n");
     writeFile(argv[2], lines);
     lines.clear();
     
@@ -428,8 +418,7 @@ int main(int argc, char *argv[])
     p = getOptimalPacking(root, newLines);
 
     cout<< p.first <<":" << p.second <<endl;
-    sprintf(pstr, "(%d,%d)\n", p.first, p.second);
-    lines.push_back(pstr);
+    lines.push_back("("+to_string(p.first)+","+to_string(p.second)+")\n");
     writeFile(argv[4], lines);
     lines.clear();
 
