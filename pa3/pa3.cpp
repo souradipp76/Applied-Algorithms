@@ -239,14 +239,14 @@ int main(int argc, char *argv[])
     vector<string> graph = readFile(argv[1]);
     long n = 0, e = 0;
     vector<vector<pair<int, double>>> adj = constructGraph(graph, n, e);
-    // cout<<n<<":"<<e<<endl;
+    cout<<n<<":"<<e<<endl;
 
     vector<int> minMeanCycle;
     double minCycleMean = mcm(adj, minMeanCycle);
     if(isinf(minCycleMean)) {
         return EXIT_FAILURE;
     }
-    // cout << minCycleMean <<endl;
+    cout << minCycleMean <<endl;
     writeBinaryFile(argv[2], minCycleMean);
 
     int cycleSize = minMeanCycle.size();
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
         string delimeter = (i == 0) ? "\n" : " ";
         cycleStr += to_string(node) + delimeter;
     }
-    // cout<<cycleStr;
+    cout<<cycleStr;
     vector<string> lines;
     lines.push_back(cycleStr);
     writeFile(argv[3], lines);
