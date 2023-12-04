@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <unordered_map>
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -48,19 +49,19 @@ vector<string> splitLine(const string s){
     return words;
 }
 
-void readBinaryFile(const string filename, int n) {
-    FILE* f = fopen(filename.c_str(), "rb");
-    for (int i = 0; i < n; i++) {
-        int id;
-        double t;
-        fread(&id, sizeof(int), 1, f);
-        fread(&t, sizeof(double), 1, f);
-        printf("%d: %.10le\n", id, t);
-    }
-    fclose(f);
-}
+// void readBinaryFile(const string filename, int n) {
+//     FILE* f = fopen(filename.c_str(), "rb");
+//     for (int i = 0; i < n; i++) {
+//         int id;
+//         double t;
+//         fread(&id, sizeof(int), 1, f);
+//         fread(&t, sizeof(double), 1, f);
+//         printf("%d: %.10le\n", id, t);
+//     }
+//     fclose(f);
+// }
 
-void writeBinaryFile(const string filename, vector<pair<int, double>> vals) {
+void writeBinaryFile(const string filename, vector<pair<int, double>> &vals) {
     FILE* f = fopen(filename.c_str(), "wb");
     int n = vals.size();
     for (int i = 0; i < n; i++) {
@@ -72,7 +73,7 @@ void writeBinaryFile(const string filename, vector<pair<int, double>> vals) {
     fclose(f);
 }
 
-void writeBinaryTopoFile(const string filename, vector<string> vals) {
+void writeBinaryTopoFile(const string filename, vector<string> &vals) {
     FILE* f = fopen(filename.c_str(), "wb");
     int id[] = {0}, count[] = {0};
     double cap[] = {0}, llen[] = {0}, rlen[] = {0};
@@ -112,12 +113,12 @@ class TreeNode {
     TreeNode(string id, double res, double cap, TreeNode *l, TreeNode *r) : nodeId(id), resistance(res), capacitance(cap), left(l), right(r) {}
 };
 
-TreeNode* constructTree(vector<string> nodes, double wireR, double wireC, double Co, double Ro) {
+TreeNode* constructTree(vector<string> &nodes, double wireR, double wireC, double Co, double Ro) {
     TreeNode *head = NULL;  
     bool success = true;
 
     stack<TreeNode*> st;
-    for(auto &node: nodes) {
+    for(string node: nodes) {
         bool isLeaf = false;
         int id = 0;
         double c = 0;
@@ -148,7 +149,8 @@ TreeNode* constructTree(vector<string> nodes, double wireR, double wireC, double
             r->capacitance += wireC*rlen*0.5;
             r->resistance += wireR*rlen;
 
-            string newId = l->nodeId +"-"+r->nodeId;
+            string newId = "";
+            // string newId = l->nodeId +"-"+r->nodeId;
             TreeNode *treeNode = new TreeNode(newId, 0, 0.5*wireC*(llen+rlen), l, r);
             treeNode -> llen = llen;
             treeNode -> rlen = rlen;
@@ -182,43 +184,45 @@ void deleteTree(TreeNode* root) {
     delete root;
 }
 
-void preOrder(TreeNode* root, vector<string> &lines) {
-    if(root == NULL || root->nodeId == "dummy") {
+void preOrder(TreeNode* root, vector<string> &lines, stringstream &ss) {
+    if(root == NULL || root->nodeId == "d") {
         return;
     }
 
-    char line[100];
     if(root->left && root->right) {
-        sprintf(line, "(%.10le %.10le)\n", root->llen, root-> rlen);
-        // cout<<line<<endl;
-        lines.push_back(line);
+        ss.str("");
+        ss<<"("<<std::setprecision(10)<<std::scientific << root->llen<<" "<<root-> rlen<<")"<<endl;
+        // cout<<ss.str();
+        lines.push_back(ss.str());
     } else {
-        sprintf(line, "%d(%.10le)\n", stoi(root->nodeId), root-> sinkCapacitance);
-        // cout<<line<<endl;
-        lines.push_back(line);
+        ss.str("");
+        ss<<std::setprecision(10)<<std::scientific << root->nodeId <<"("<<root-> sinkCapacitance<<")"<<endl;
+        // cout<<ss.str();
+        lines.push_back(ss.str());
     }
     
-    preOrder(root->left, lines);
-    preOrder(root->right, lines);
+    preOrder(root->left, lines, ss);
+    preOrder(root->right, lines, ss);
 }
 
-void postOrder(TreeNode* root, vector<string> &lines) {
-    if(root == NULL || root->nodeId == "dummy") {
+void postOrder(TreeNode* root, vector<string> &lines, stringstream &ss) {
+    if(root == NULL || root->nodeId == "d") {
         return;
     }
 
-    postOrder(root->left, lines);
-    postOrder(root->right, lines);
+    postOrder(root->left, lines, ss);
+    postOrder(root->right, lines, ss);
 
-    char line[100];
     if(root->left && root->right) {
-        sprintf(line, "(%.10le %.10le %d)\n", root->llen, root-> rlen, root->invCount);
-        //cout<<line<<endl;
-        lines.push_back(line);
+        ss.str("");
+        ss<<"("<<std::setprecision(10)<<std::scientific << root->llen<<" "<<root-> rlen <<" "<<root->invCount<<")"<<endl;
+        // cout<<ss.str();
+        lines.push_back(ss.str());
     } else {
-        sprintf(line, "%d(%.10le)\n", stoi(root->nodeId), root-> sinkCapacitance);
-        //cout<<line<<endl;
-        lines.push_back(line);
+        ss.str("");
+        ss<<std::setprecision(10)<<std::scientific << root->nodeId <<"("<<root-> sinkCapacitance<<")"<<endl;
+        // cout<<ss.str();
+        lines.push_back(ss.str());
     }
 
 }
@@ -305,35 +309,37 @@ void displayElmoreDelay(TreeNode* root){
     }
 }
 
-double calculateInsertionLength(vector<double> invParams, vector<double> wireParams, double L, double C, double t){
+double calculateInsertionLength(vector<double> invParams, vector<double> wireParams, double L, double C, double t, int k){
     //double Ci = invParams[0];
-    //double Co = invParams[1];
+    double Co = invParams[1];
     double Ro = invParams[2];
 
     double re = wireParams[0];
     double ce = wireParams[1];
 
-    double a = 0.5*re*ce*L*L;
-    double b = re*L*(C - 0.5*ce*L) + 0.5*ce*Ro*L;
-    double c = Ro*(C - 0.5*ce*L) - t;
+    double a = re*ce*L*L;
+    double b = (C - 0.5*ce*L)*re*L + 0.5*ce*L*(Ro/k) -re*ce*L*L + (C - 0.5*ce*L+k*Co)*re*L;
+    double c = (C- 0.5*ce*L)*(Ro/k) - (C+k*Co - 0.5*ce*L)*re*L - t;
 
-    cout<<L<<endl;
-    cout<<C<<endl;
-    cout<<a<<":"<<b<<":"<<c<<endl;
+    // cout<<L<<endl;
+    // cout<<C<<endl;
+    // cout<<a<<":"<<b<<":"<<c<<endl;
 
     double D = b*b - 4*a*c;
+    // cout<<D<<endl;
     if(D < 0) {
         return -1;
     }
 
     double x = (-b + sqrt(D))/(2.*a);
     double y = (-b - sqrt(D))/(2.*a);
-    //cout<<x<<endl;
-    if(x>=0 && x<=1) {
+    // cout<<"x:"<<x<<endl;
+    // cout<<y<<endl;
+    if(x>=1.0e-6 && x<=1) {
         return x;
     } 
 
-    if(y>=0 && y<=1) {
+    if(y>=1.0e-6 && y<=1) {
         return y;
     }
 
@@ -350,7 +356,7 @@ TreeNode* insertInvNode(TreeNode* head,
                         TreeNode* parent, 
                         vector<double> &invParams, 
                         vector<double> &wireParams, 
-                        double x) {
+                        double x, int k) {
     string id = node->nodeId;
     string pid = parent -> nodeId;
 
@@ -364,48 +370,62 @@ TreeNode* insertInvNode(TreeNode* head,
     bool isLeft = parent->left == node;
     double L = isLeft ? parent -> llen : parent ->rlen;
 
-    if(x > 1) {
-        // Place inverter node at parent node
-        parent->invCount++;
-        parent->sinkCapacitance = parent->invCount*Ci;
-        parent->capacitance = parent->sinkCapacitance;
-        parent->downstreamCapacitance = Co + 0.5*ce*L + node->downstreamCapacitance;
+    // if(x < 1e-6 && node != head) {
+    //     // Place inverter node at the node
+    //     node->invCount++;
+    //     node->sinkCapacitance = node->invCount*Ci;
+    //     node->capacitance = node->invCount*Co;
+    //     node->downstreamCapacitance = Co + node->downstreamCapacitance - 0.5*ce*L;
 
-        calculateDownstreamCapacitance(head);
-        calculateElmoreDelay(head);
-        return parent;
+    //     calculateDownstreamCapacitance(head);
+    //     calculateElmoreDelay(head);
+    //     return node;
 
+    // } else 
+    // if (x >= 1 && parent != head) {
+    //     // Place inverter node at parent node
+    //     parent->invCount++;
+    //     parent->sinkCapacitance = parent->invCount*Ci;
+    //     parent->capacitance = parent->invCount*Co;
+    //     parent->downstreamCapacitance = Co + 0.5*ce*L + node->downstreamCapacitance;
+
+    //     calculateDownstreamCapacitance(head);
+    //     calculateElmoreDelay(head);
+    //     return parent;
+
+    // } else {
+
+    // Create inverter node
+    // TreeNode* treeNode = new TreeNode(pid+"-inv-"+id, k*Ci+0.5*ce*L*(1-x));
+    TreeNode* treeNode = new TreeNode("", k*Ci+0.5*ce*L*(1-x));
+    treeNode->llen = x*L;
+    treeNode->rlen = -1;
+    treeNode->resistance = (1-x)*L*re;
+    treeNode->capacitance = Co*k + 0.5*x*ce*L;
+    treeNode->downstreamCapacitance = treeNode->capacitance + node->downstreamCapacitance - 0.5*(1-x)*ce*L;
+
+    node->resistance = (Ro/k)+x*L*re;
+    node->capacitance -= 0.5*(1-x)*ce*L;
+    node->downstreamCapacitance -= 0.5*(1-x)*ce*L;
+
+    treeNode->invCount+=k;
+    treeNode->left = node;
+    treeNode->right = new TreeNode("d", 0);
+    
+    // Insert Inverter node
+    if(isLeft) {
+        parent -> left = treeNode;
+        parent -> llen = (1-x)*L;
     } else {
-        // Create inverter node
-        TreeNode* treeNode = new TreeNode(pid+"-inv-"+id, Ci);
-        treeNode->llen = x*L;
-        treeNode->rlen = -1;
-        treeNode->resistance = (1-x)*L*re;
-        treeNode->capacitance = Ci + 0.5*ce*L*(1-x);
-        treeNode->downstreamCapacitance = Co + 0.5*x*ce*L + node->downstreamCapacitance;
-
-        node->resistance = Ro+x*L*re;
-        node->capacitance -= 0.5*(1-x)*ce*L;
-        node->downstreamCapacitance -= 0.5*(1-x)*ce*L;
-
-        treeNode->invCount++;
-        treeNode->left = node;
-        treeNode->right = new TreeNode("dummy", 0);
-        
-        // Insert Inverter node
-        if(isLeft) {
-            parent -> left = treeNode;
-            parent -> llen = (1-x)*L;
-        } else {
-            parent -> right = treeNode;
-            parent -> rlen = (1-x)*L;
-        }
-
-        calculateDownstreamCapacitance(head);
-        calculateElmoreDelay(head);
-
-        return treeNode;
+        parent -> right = treeNode;
+        parent -> rlen = (1-x)*L;
     }
+
+    calculateDownstreamCapacitance(head);
+    calculateElmoreDelay(head);
+
+    return treeNode;
+    // }
 }
 
 double insertInverters(TreeNode* head, 
@@ -441,17 +461,28 @@ double insertInverters(TreeNode* head,
         // cout<<"LDelay:"<<ldelay<<endl;
         while(ldelay + left_delay > time_constraint) {
             double remain = time_constraint - left_delay;
-            double x = calculateInsertionLength(invParams, wireParams, root ->llen, l->downstreamCapacitance, remain);
+            int k = 1;
+            bool done = false;
+            while(!done && k<10){
+                double x = calculateInsertionLength(invParams, wireParams, root ->llen, l->downstreamCapacitance, remain, k);
+                if(x == -1) {
+                    valid = false;
+                    k++;
+                    continue;
+                }
 
-            if(x == -1) {
-                valid = false;
-                break;
+                valid = true;
+                done = true;
+                TreeNode* temp = insertInvNode(head, l, root, invParams, wireParams, x, k);
+                l = temp; 
+                ldelay = l->delay - root->delay;
+                left_delay = 0;
             }
 
-            TreeNode* temp = insertInvNode(head, l, root, invParams, wireParams, x);
-            l = temp; 
-            ldelay = l->delay - root->delay;
-            left_delay = 0;
+            if(!valid) {
+                break;
+            }
+            
         }
     }
 
@@ -470,16 +501,28 @@ double insertInverters(TreeNode* head,
         // cout<<"RDelay:"<<rdelay<<endl;
         while(rdelay + right_delay > time_constraint) {
             double remain = time_constraint - right_delay;
-            double x = calculateInsertionLength(invParams, wireParams, root ->rlen, r->downstreamCapacitance, remain);
+            int k = 1;
+            bool done = false;
+            while(!done && k<10){
+                double x = calculateInsertionLength(invParams, wireParams, root ->rlen, r->downstreamCapacitance, remain, k);
             
-            if(x == -1) {
+                if(x == -1) {
+                    valid = false;
+                    k++;
+                    continue;
+                }
+
+                valid = true;
+                done = true;
+                TreeNode* temp = insertInvNode(head, r, root, invParams, wireParams, x, k);
+                r = temp; 
+                rdelay = r->delay - root->delay;
+                right_delay = 0;
+            }
+            
+            if(!valid) {
                 break;
             }
-
-            TreeNode* temp = insertInvNode(head, r, root, invParams, wireParams, x);
-            r = temp; 
-            rdelay = r->delay - root->delay;
-            right_delay = 0;
         }
     }
 
@@ -520,33 +563,29 @@ bool correctInverterInsertion(TreeNode* head,
                         vector<double> &invParams, 
                         vector<double> &wireParams,
                         int pathCount, 
-                        bool &inserted) {
+                        int &totalInvCount) {
     if(!root->left && !root->right) {
+        // cout<<root->nodeId<<"||"<<pathCount<<endl;
         if((pathCount + root->invCount)&1) {
-            //cout<<root->nodeId<<endl;
+            totalInvCount+=root->invCount;
             return false;
         }
     }
-
+    
+    totalInvCount+=root->invCount;
     if(root->left && root->llen !=-1) {
-        bool leftValid = correctInverterInsertion(head, root->left, invParams, wireParams, pathCount+root->invCount, inserted);
+        bool leftValid = correctInverterInsertion(head, root->left, invParams, wireParams, pathCount+root->invCount, totalInvCount);
         if(!leftValid) {
-            if(!inserted) {
-                insertInvNode(head, root->left, root, invParams, wireParams, 1);
-                inserted = true;
-            }
-            return false;
+            insertInvNode(head, root->left, root, invParams, wireParams, 0, 1);
+            totalInvCount++;
         }
     }
 
     if(root->right && root->rlen !=-1) {
-        bool rightValid = correctInverterInsertion(head, root->right, invParams, wireParams, pathCount+root->invCount, inserted);
+        bool rightValid = correctInverterInsertion(head, root->right, invParams, wireParams, pathCount+root->invCount, totalInvCount);
         if(!rightValid) {
-            if(!inserted) {
-                insertInvNode(head, root->right, root, invParams, wireParams, 1);
-                inserted = true;
-            }
-            return false;
+            insertInvNode(head, root->right, root, invParams, wireParams, 0, 1);
+            totalInvCount++;
         }
     }
 
@@ -585,9 +624,11 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    stringstream ss;
+
     // First Output
     vector<string> topology;
-    preOrder(root, topology);
+    preOrder(root, topology, ss);
     writeFile(argv[5], topology);
 
     // Second Output
@@ -622,17 +663,20 @@ int main(int argc, char *argv[])
     // cout<<isNonInverting<<endl;
 
     //Make tree non-inverting
-    bool inserted = false;
-    correctInverterInsertion(root, root, iParams, wParams, 0, inserted);
+    int totalInvCount = 0;
+    correctInverterInsertion(root, root, iParams, wParams, 0, totalInvCount);
 
     vector<string> invTopology;
-    postOrder(root, invTopology);
+    postOrder(root, invTopology, ss);
     writeFile(argv[7], invTopology);
 
     // Fourth Output
     writeBinaryTopoFile(argv[8], invTopology);
 
-    displayElmoreDelay(root);
+    // displayElmoreDelay(root);
+
+    // cout<< validateInverterInsertion(root, 0)<<endl;
+    // cout<< totalInvCount<<endl;
 
     // Release resource
     deleteTree(root);
