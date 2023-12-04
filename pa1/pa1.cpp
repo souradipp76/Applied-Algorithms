@@ -335,16 +335,16 @@ double calculateInsertionLength(vector<double> invParams, vector<double> wirePar
     double y = (-b - sqrt(D))/(2.*a);
     // cout<<"x:"<<x<<endl;
     // cout<<y<<endl;
-    if(x>=1.0e-6 && x<=1) {
+    if(x>=0 && x<=1) {
         return x;
     } 
 
-    if(y>=1.0e-6 && y<=1) {
+    if(y>=0 && y<=1) {
         return y;
     }
 
     if(x>1 || y>1) {
-        return 1.1;
+        return 1;
     }
 
     return -1;
@@ -425,7 +425,7 @@ TreeNode* insertInvNode(TreeNode* head,
     calculateElmoreDelay(head);
 
     return treeNode;
-    // }
+
 }
 
 double insertInverters(TreeNode* head, 
